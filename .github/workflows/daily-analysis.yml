@@ -1,0 +1,40 @@
+name: 每日推特财经言论分析
+
+on:
+  schedule:
+    # 北京时间每天 8:00 = UTC 0:00
+    - cron: '0 0 * * *'
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 允许自动提交报告
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install snscrape requests python-dateutil pytz
+
+      - name: Run analysis
+        env:
+          MOONSHOT_API_KEY: ${{ secrets.MOONSHOT_API_KEY }}
+        run: |
+          python main.py --hours 24 --max 30
+
+      - name: Commit reports
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/ data/
+          git diff --cached --quiet || git commit -m "Daily twitter analysis $(date +%Y-%m-%d)"
+          git push
