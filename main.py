@@ -70,11 +70,7 @@ def run(mock_mode: bool = False, proxy: str = None, hours: int = 24, max_per: in
             })
     logger.info(f"共抓取 {len(all_tweets)} 条推文")
 
-    if not all_tweets:
-        logger.warning("未抓取到任何推文，分析结束")
-        return
-
-    # 保存原始数据
+    # 保存原始数据（无论是否抓到推文都创建目录）
     data_dir = os.path.join(os.path.dirname(__file__), "data")
     os.makedirs(data_dir, exist_ok=True)
     today = datetime.now().strftime("%Y%m%d")
@@ -82,6 +78,9 @@ def run(mock_mode: bool = False, proxy: str = None, hours: int = 24, max_per: in
     with open(raw_path, "w", encoding="utf-8") as f:
         json.dump(all_tweets, f, ensure_ascii=False, indent=2)
     logger.info(f"原始数据已保存: {raw_path}")
+
+    if not all_tweets:
+        logger.warning("未抓取到任何推文，生成空报告")
 
     # 3. AI 分析
     analyzer = TweetAnalyzer()
